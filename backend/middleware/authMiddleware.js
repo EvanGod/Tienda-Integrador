@@ -8,14 +8,14 @@ const verifyToken = (req, res, next) => {
     return res.status(403).json({ message: 'No se proporcionó un token' });
   }
 
-  jwt.verify(token, 'secreto_jwt', (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.status(401).json({ message: 'Token no válido' });
     }
 
-    req.user = decoded;
+    req.user = decoded; // Aquí debería ir el decoded que incluye el rol
     next();
   });
 };
 
-module.exports = { verifyToken };
+module.exports =  verifyToken ;

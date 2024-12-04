@@ -1,9 +1,25 @@
-// routes/authRoutes.js
 const express = require('express');
 const router = express.Router();
-const { login, register } = require('../controllers/authController.js');
+const { login, register } = require('../controllers/authController');
+const checkRole = require('../middleware/roleMiddleware');
+const verifyToken = require('../middleware/authMiddleware');
 
-router.post('/login', login);
-router.post('/register', register);
+// Aquí debes asegurarte de pasar correctamente los middlewares y el controlador
+router.post('/login', login);  // Login solo necesita el controlador
+
+// La ruta register debe tener los middlewares en un arreglo
+router.post('/register', [verifyToken, checkRole(['Administrador']), register]);
+
+router.get('/admin-dashboard', verifyToken, checkRole(['Administrador']), (req, res) => {
+  res.status(200).json({ message: 'Bienvenido al panel de administrador' });
+});
+
+router.get('/encargado-dashboard', verifyToken, checkRole(['Encargado']), (req, res) => {
+  res.status(200).json({ message: 'Bienvenido al panel de encargado' });
+});
+
+router.get('/empleado-dashboard', verifyToken, checkRole(['Empleado']), (req, res) => {
+  res.status(200).json({ message: 'Bienvenido al panel de empleado' });
+});
 
 module.exports = router;
