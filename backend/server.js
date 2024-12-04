@@ -6,6 +6,7 @@ const db = require('./db/connection'); // Conexión a la base de datos
 const authRoutes = require('./routes/authRoutes');
 const personaRoutes = require('./routes/personaRoutes');
 const categoriaRoutes = require('./routes/categoriaRoutes');
+const productoRoutes = require('./routes/productoRoutes');
 
 const app = express();
 
@@ -33,6 +34,7 @@ db.getConnection()
 app.use('/api/auth', authRoutes);
 app.use('/api/personas', personaRoutes);
 app.use('/api/categorias', categoriaRoutes);
+app.use('/api/productos', productoRoutes);
 
 // Middleware de manejo de errores (al final)
 app.use((err, req, res, next) => {
