@@ -4,6 +4,8 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db/connection'); // Conexión a la base de datos
 const authRoutes = require('./routes/authRoutes');
+const personaRoutes = require('./routes/personaRoutes');
+const categoriaRoutes = require('./routes/categoriaRoutes');
 
 const app = express();
 
@@ -29,6 +31,8 @@ db.getConnection()
 
 // Rutas
 app.use('/api/auth', authRoutes);
+app.use('/api/personas', personaRoutes);
+app.use('/api/categorias', categoriaRoutes);
 
 // Middleware de manejo de errores (al final)
 app.use((err, req, res, next) => {
