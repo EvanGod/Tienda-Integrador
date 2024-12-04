@@ -1,7 +1,7 @@
 // controllers/authController.js
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { getUserByEmail, comparePassword } = require('../models/userModel');
+const { getUserByEmail, comparePassword, createUser, getRoleIdByName } = require('../models/userModel');
 
 // Función para login
 const login = async (req, res) => {
@@ -37,4 +37,54 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { login };
+const register = async (req, res) => {
+  const { rol, nombre, email, password } = req.body;
+
+  // Validación de campos requeridos
+  if (!rol || !nombre || !email || !password) {
+    return res.status(400).json({ message: 'Todos los campos requeridos deben ser proporcionados' });
+  }
+
+  // Validar propiedades opcionales
+  const tipo_documento = req.body.tipo_documento || null;
+  const num_documento = req.body.num_documento || null;
+  const direccion = req.body.direccion || null;
+  const telefono = req.body.telefono || null;
+
+  try {
+    // Validar que el email no esté registrado
+    const existingUser = await getUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ message: 'El correo electrónico ya está registrado' });
+    }
+
+    // Obtener el idrol a partir del nombre del rol
+    const idrol = await getRoleIdByName(rol);
+    if (!idrol) {
+      return res.status(400).json({ message: `El rol "${rol}" no existe en la base de datos` });
+    }
+
+    // Hashear la contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Crear el nuevo usuario
+    const newUser = await createUser({
+      idrol,
+      nombre,
+      tipo_documento,
+      num_documento,
+      direccion,
+      telefono,
+      email,
+      password: hashedPassword,
+    });
+
+    res.status(201).json({ message: 'Usuario registrado exitosamente', userId: newUser.insertId });
+  } catch (error) {
+    console.error('Error en register:', error);
+    res.status(500).json({ message: 'Error del servidor al registrar el usuario' });
+  }
+};
+
+
+module.exports = { login, register };

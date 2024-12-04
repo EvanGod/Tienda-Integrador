@@ -12,4 +12,29 @@ const comparePassword = async (password, hash) => {
   return bcrypt.compare(password, hash);
 };
 
-module.exports = { getUserByEmail, comparePassword };
+// Obtener el idrol por el nombre del rol
+const getRoleIdByName = async (roleName) => {
+  const query = 'SELECT idrol FROM rol WHERE nombre = ?';
+  const [rows] = await db.execute(query, [roleName]);
+  return rows[0]?.idrol; // Retorna el idrol o undefined si no existe
+};
+
+const createUser = async ({ nombre, tipo_documento, num_documento, direccion, telefono, email, password, idrol }) => {
+  const query = 'INSERT INTO usuario (nombre, tipo_documento, num_documento, direccion, telefono, email, password, idrol) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+  
+  const [result] = await db.execute(query, [
+    nombre,
+    tipo_documento,
+    num_documento,
+    direccion,
+    telefono,
+    email,
+    password,
+    idrol
+  ]);
+
+  return { idusuario: result.insertId, nombre, tipo_documento, num_documento, direccion, telefono, email, idrol };  // Retornar todos los datos del usuario creado
+};
+
+
+module.exports = { getUserByEmail, comparePassword, createUser, getRoleIdByName};
