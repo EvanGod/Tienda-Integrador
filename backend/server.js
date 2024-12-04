@@ -1,30 +1,36 @@
 require('dotenv').config();  // Cargar variables de entorno
 
 const express = require('express');
-const bodyParser = require('body-parser');
-const authRoutes = require('./routes/authRoutes');
 const cors = require('cors');
 const db = require('./db/connection'); // Conexión a la base de datos
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json()); // Para que el servidor reciba datos JSON
+app.use(express.json()); // Para que el servidor reciba datos JSON
 
 // Verificación de la conexión a la base de datos
 db.getConnection()
   .then(() => {
     console.log('Conexión a la base de datos establecida');
+    // Iniciar servidor solo si la conexión es exitosa
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en puerto ${PORT}`);
+    });
   })
   .catch((err) => {
     console.error('Error conectando a la base de datos', err.message);
+    // Si no se puede conectar, no iniciar el servidor
+    process.exit(1);
   });
 
 // Rutas
 app.use('/api/auth', authRoutes);
 
-// Middleware de manejo de errores
+// Middleware de manejo de errores (al final)
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -33,14 +39,9 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Middleware de log (opcional)
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
 
-
-// Iniciar servidor
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
-});

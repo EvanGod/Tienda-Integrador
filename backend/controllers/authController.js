@@ -45,7 +45,7 @@ const register = async (req, res) => {
     return res.status(400).json({ message: 'Todos los campos requeridos deben ser proporcionados' });
   }
 
-  // Validar propiedades opcionales
+  // Propiedades opcionales
   const tipo_documento = req.body.tipo_documento || null;
   const num_documento = req.body.num_documento || null;
   const direccion = req.body.direccion || null;
@@ -58,7 +58,7 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'El correo electrónico ya está registrado' });
     }
 
-    // Obtener el idrol a partir del nombre del rol
+    // Obtener idrol a partir del nombre del rol
     const idrol = await getRoleIdByName(rol);
     if (!idrol) {
       return res.status(400).json({ message: `El rol "${rol}" no existe en la base de datos` });
@@ -79,12 +79,22 @@ const register = async (req, res) => {
       password: hashedPassword,
     });
 
-    res.status(201).json({ message: 'Usuario registrado exitosamente', userId: newUser.insertId });
+    // Responder con los detalles del nuevo usuario
+    res.status(201).json({
+      message: 'Usuario registrado exitosamente',
+      user: {
+        idusuario: newUser.insertId,
+        nombre: newUser.nombre,
+        email: newUser.email,
+        rol: newUser.idrol, // o el nombre del rol si es necesario
+      },
+    });
   } catch (error) {
     console.error('Error en register:', error);
     res.status(500).json({ message: 'Error del servidor al registrar el usuario' });
   }
 };
+
 
 
 module.exports = { login, register };
