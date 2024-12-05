@@ -8,17 +8,17 @@ const verifyToken = require('../middleware/authMiddleware');
 router.post('/login', login);  // Login solo necesita el controlador
 
 // La ruta register debe tener los middlewares en un arreglo
-router.post('/register', [verifyToken, checkRole(['Administrador']), register]);
+router.post('/register', [verifyToken, checkRole([1]), register]);
 
-router.get('/admin-dashboard', verifyToken, checkRole(['Administrador']), (req, res) => {
+router.get('/admin-dashboard', verifyToken, checkRole([1]), (req, res) => {
   res.status(200).json({ message: 'Bienvenido al panel de administrador' });
 });
 
-router.get('/encargado-dashboard', verifyToken, checkRole(['Encargado']), (req, res) => {
+router.get('/encargado-dashboard', verifyToken, checkRole([2]), (req, res) => {
   res.status(200).json({ message: 'Bienvenido al panel de encargado' });
 });
 
-router.get('/empleado-dashboard', verifyToken, checkRole(['Empleado']), (req, res) => {
+router.get('/empleado-dashboard', verifyToken, checkRole([3]), (req, res) => {
   res.status(200).json({ message: 'Bienvenido al panel de empleado' });
 });
 
