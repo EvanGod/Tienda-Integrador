@@ -1,12 +1,14 @@
 const pool = require('../db/connection');
 const queriesVenta = require('../utils/queriesVenta');
 const queriesDetalleVenta = require('../utils/queriesDetalleVenta');
+const queriesArticulo = require('../utils/queriesArticulo');
 const queriesUsuario = require('../utils/queriesUsuario');
 const queriesPersona = require('../utils/queriesPersona');
 
 // Registrar una venta con transacción
 exports.registrarVenta = async (req, res) => {
-    const { idcliente, idusuario, tipo_comprobante, serie_comprobante, num_comprobante, detalles } = req.body;
+    const { idcliente, tipo_comprobante, serie_comprobante, num_comprobante, detalles } = req.body;
+    const idusuario = req.user.idusuario; // Extraer idusuario desde el token
 
     try {
         await pool.getConnection(async (conn) => {
@@ -26,11 +28,25 @@ exports.registrarVenta = async (req, res) => {
 
                 const idventa = ventaResult.insertId;
 
-                // Insertar los detalles de la venta
+                // Insertar los detalles de la venta y validar stock
                 for (const detalle of detalles) {
+                    // Verificar si hay suficiente stock
+                    const [articulo] = await conn.query(queriesArticulo.obtenerStock, [detalle.idarticulo]);
+
+                    if (articulo[0].stock < detalle.cantidad) {
+                        throw new Error(`No hay suficiente stock para el artículo ${detalle.idarticulo}`);
+                    }
+
+                    // Actualizar el stock
+                    await conn.query(queriesArticulo.actualizarStock, [detalle.cantidad, detalle.idarticulo, detalle.cantidad]);
+
+                    // Insertar detalle de venta
                     await conn.query(queriesDetalleVenta.insertarDetalleVenta, [
                         idventa, detalle.idarticulo, detalle.cantidad, detalle.precio, detalle.descuento
                     ]);
+
+                    // Verificar si el stock llegó a 0, y actualizar estado a inactivo
+                    await conn.query(queriesArticulo.cambiarEstadoSiSinStock, [detalle.idarticulo]);
                 }
 
                 // Confirmar transacción
