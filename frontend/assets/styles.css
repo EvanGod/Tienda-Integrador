@@ -1,0 +1,91 @@
+body {
+    background-color: #f4f4f4;
+  }
+  
+  h2 {
+    color: #0056b3;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  ul li {
+    margin: 10px 0;
+  }
+  
+  ul li a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  ul li a:hover {
+    text-decoration: underline;
+  }
+  
+  #logout-btn {
+    margin-top: 10px;
+  }
+  
+ /* Modal de confirmación */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro */
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Centrar la tabla y darle margen */
+.table-responsive {
+  margin: 0 auto; /* Centrado horizontal */
+  margin-top: 20px;
+}
+
+/* Opcional: Modificar el espacio entre la tabla y el contenido superior */
+h3.text-center {
+  margin-top: 40px;  /* Añadir margen superior */
+}
+
+/* Centramos los elementos del cuerpo de la tabla */
+.table th, .table td {
+  text-align: center;
+}
+
+/* Opcional: Agregar margen a la página */
+body {
+  margin: 0 20px; /* Agrega margen en los bordes */
+}
+
+/* Modal y otros elementos */
+.modal-content {
+  margin: auto;
+  max-width: 400px; /* Ancho máximo del modal */
+}
+

@@ -9,12 +9,26 @@ const crearProducto = async (producto) => {
   return result;
 };
 
-// Obtener todos los productos
 const obtenerProductos = async () => {
-  const query = `SELECT * FROM articulo WHERE estado = 1`;
+  const query = `
+    SELECT 
+      a.idarticulo, 
+      a.nombre, 
+      a.codigo, 
+      a.precio_venta, 
+      a.stock, 
+      a.descripcion, 
+      a.estado, 
+      c.nombre AS categoria 
+    FROM 
+      articulo a
+    JOIN 
+      categoria c ON a.idcategoria = c.idcategoria
+  `;
   const [result] = await pool.execute(query);
   return result;
 };
+
 
 // Obtener un producto por ID
 const obtenerProductoPorId = async (idarticulo) => {
