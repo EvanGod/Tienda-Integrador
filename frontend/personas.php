@@ -32,7 +32,7 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <title>Personas</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/styles.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
@@ -53,49 +53,64 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
       <button class="btn btn-danger" id="logout-btn">Cerrar sesión</button>
     </div>
 
-    
-
-    <h3 class="mt-4 text-center">Lista de Productos</h3>
-    <!-- Botón "Agregar..." solo visible para Admin y Encargado -->
-<?php if ($userRole == 1 || $userRole == 2): ?>
-  <div class="d-flex justify-content-end mt-3">
-    <button class="btn btn-success" id="agregar-btn">Agregar...</button>
-  </div>
-<?php endif; ?>
-  <div id="productos" class="table-responsive mt-3 mx-auto">
+    <?php if ($userRole == 1 || $userRole == 2): ?>
+        
+        <h4 class="mt-4 text-center">Lista de Proveedores</h4>
+        <?php if ($userRole == 2): ?>
+            <div class="d-flex justify-content-end mt-3">
+            <button class="btn btn-success" id="agregar-proveedores" onclick="window.location.href='agregar_proveedor.php'">Agregar...</button>
+            </div>
+        <?php endif; ?>
+        <div id="proveedores" class="table-responsive mt-3 mx-auto">
         <table class="table table-bordered text-center" style="max-width: 100%;">  <!-- Agregado el max-width -->
             <thead class="table-dark">
           <tr>
             <th>ID</th>
-            <th>Categoría</th>
             <th>Nombre</th>
-            <th>Código</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Descripción</th>
-            <th>Estado</th>
-            <?php if ($userRole == 1 || $userRole == 2): // Administrador o Encargado ?>
-              <th>Acciones</th>
-            <?php endif; ?>
+            <th>Documento</th>
+            <th># Documento</th>
+            <th>Direccion</th>
+            <th>Telefono</th>
+            <th>Email</th>
           </tr>
         </thead>
-        <tbody id="productos-tbody">
-          <!-- Productos cargados dinámicamente aquí -->
+        <tbody id="proveedores-tbody">
+          <!-- Proveedores cargados dinámicamente aquí -->
         </tbody>
       </table>
         </div>
-  </div>
-
-  <!-- Modal de confirmación -->
-<div id="modalConfirmacion" class="modal" style="display:none;">
-  <div class="modal-content">
-    <span id="btnCancelar" class="close">&times;</span>
-    <h3>¿Estás seguro de que deseas eliminar este producto?</h3>
-    <button id="btnConfirmar">Sí, eliminar</button>
-  </div>
-</div>
-  <!-- Tabla de productos -->
   
+  <?php endif; ?>
+
+  <?php if ($userRole == 1 || $userRole == 3): ?>
+        <h4 class="mt-4 text-center">Lista de Clientes</h4>
+        <?php if ($userRole == 3): ?>
+            <div class="d-flex justify-content-end mt-3">
+  <button class="btn btn-success" id="agregar-clientes" onclick="window.location.href='agregar_cliente.php'">Agregar...</button>
+</div>
+        <?php endif; ?>
+        <div id="clientes" class="table-responsive mt-3 mx-auto">
+        <table class="table table-bordered text-center" style="max-width: 100%;">  <!-- Agregado el max-width -->
+            <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Documento</th>
+            <th># Documento</th>
+            <th>Direccion</th>
+            <th>Telefono</th>
+            <th>Email</th>
+          </tr>
+        </thead>
+        <tbody id="clientes-tbody">
+          <!-- Clientes cargados dinámicamente aquí -->
+        </tbody>
+      </table>
+        </div>
+  
+  <?php endif; ?>
+  </div>
+ 
 
   <!-- Modal para errores -->
   <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
@@ -226,9 +241,10 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
       `;
   }
 
+  <?php if ($userRole == 2 || $userRole == 1): ?>
   // Cargar productos
   // Cargar productos
-fetch('http://localhost:5000/api/productos/productos', {
+fetch('http://localhost:5000/api/personas/proveedores', {
   method: 'GET',
   headers: {
     'Authorization': 'Bearer <?php echo $_SESSION['token']; ?>',
@@ -238,51 +254,71 @@ fetch('http://localhost:5000/api/productos/productos', {
 .then(response => response.json())
 .then(data => {
   if (data.error) {
-    alert('Error al cargar los productos: ' + data.error);
+    alert('Error al cargar los proveedores: ' + data.error);
     return;
   }
 
-  const productosBody = document.getElementById('productos-tbody');
-  productosBody.innerHTML = ''; // Limpia la tabla antes de agregar productos
+  const proveedoresBody = document.getElementById('proveedores-tbody');
+  proveedoresBody.innerHTML = ''; // Limpia la tabla antes de agregar proveedores
 
-  data.forEach(producto => {
+  data.forEach(proveedor => {
   const row = document.createElement('tr');
   row.innerHTML = `
-    <td>${producto.idarticulo}</td>
-    <td>${producto.categoria}</td>
-    <td>${producto.nombre}</td>
-    <td>${producto.codigo || 'N/A'}</td>
-    <td>${producto.precio_venta}</td>
-    <td>${producto.stock}</td>
-    <td>${producto.descripcion || 'Sin descripción'}</td>
-    <td>${producto.estado.data[0] === 1 ? 'Activo' : 'Eliminado'}</td>
-    <?php if ($userRole == 1 || $userRole == 2): // Administrador o Encargado ?>
-    <td class="d-flex justify-content-center">
-  <button class="btn btn-warning btn-sm me-2" onclick="editarProducto(${producto.idarticulo})">Editar</button>
-  <button class="btn btn-danger btn-sm btn-eliminar" data-id="${producto.idarticulo}">Eliminar</button>
-</td>
-
-
-    <?php endif; ?>
+    <td>${proveedor.idpersona}</td>
+    <td>${proveedor.nombre}</td>
+    <td>${proveedor.tipo_documento}</td>
+    <td>${proveedor.num_documento}</td>
+    <td>${proveedor.direccion}</td>
+    <td>${proveedor.telefono}</td>
+    <td>${proveedor.email}</td>
     
   `;
 
-  // Aquí verificamos si el estado es 0 (eliminado) y luego ocultamos el botón de eliminar
-  if (producto.estado.data[0] === 0) {
-    // Accedemos al botón de eliminar y lo ocultamos
-    const btnEliminar = row.querySelector('.btn-eliminar');
-    if (btnEliminar) {
-      btnEliminar.style.display = 'none';
-    }
-  }
 
-  productosBody.appendChild(row);
+  proveedoresBody.appendChild(row);
 });
 
 })
 .catch(error => console.error('Error:', error));
+<?php endif; ?>
+<?php if ($userRole == 2 || $userRole == 1): ?>
+fetch('http://localhost:5000/api/personas/compradores', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer <?php echo $_SESSION['token']; ?>',
+    'Content-Type': 'application/json'
+  }
+})
+.then(response => response.json())
+.then(data => {
+  if (data.error) {
+    alert('Error al cargar los clientes: ' + data.error);
+    return;
+  }
+
+  const clientesBody = document.getElementById('clientes-tbody');
+  clientesBody.innerHTML = ''; // Limpia la tabla antes de agregar clientes
+
+  data.forEach(cliente => {
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${cliente.idpersona}</td>
+    <td>${cliente.nombre}</td>
+    <td>${cliente.tipo_documento}</td>
+    <td>${cliente.num_documento}</td>
+    <td>${cliente.direccion}</td>
+    <td>${cliente.telefono}</td>
+    <td>${cliente.email}</td>
+    
+  `;
 
 
+  clientesBody.appendChild(row);
+});
+
+})
+.catch(error => console.error('Error:', error));
+<?php endif; ?>
 
   // Cerrar sesión
   document.getElementById('logout-btn').addEventListener('click', () => {

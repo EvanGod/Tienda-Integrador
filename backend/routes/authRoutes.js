@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { login, register } = require('../controllers/authController');
+const { login, register, getUsers } = require('../controllers/authController');
 const checkRole = require('../middleware/roleMiddleware');
 const verifyToken = require('../middleware/authMiddleware');
 
@@ -9,6 +9,9 @@ router.post('/login', login);  // Login solo necesita el controlador
 
 // La ruta register debe tener los middlewares en un arreglo
 router.post('/register', [verifyToken, checkRole([1]), register]);
+
+// La ruta register debe tener los middlewares en un arreglo
+router.get('/usuarios', [verifyToken, checkRole([1]), getUsers]);
 
 router.get('/admin-dashboard', verifyToken, checkRole([1]), (req, res) => {
   res.status(200).json({ message: 'Bienvenido al panel de administrador' });

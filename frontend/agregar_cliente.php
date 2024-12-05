@@ -25,6 +25,11 @@ if (!$user) {
 }
 
 $userRole = $user['role'];  // Obtén el rol del usuario desde el token
+
+if ($userRole != 3) {
+    header('Location: dashboard.php');  // Redirige al login si no hay token
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -32,7 +37,7 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <title>Clientes</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/styles.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
@@ -47,78 +52,79 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
 <div class="row mt-4 justify-content-center text-center" id="content">
   <!-- Los iconos y textos se generarán dinámicamente -->
 </div>
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="messageModalLabel">Mensaje</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="messageModalBody">
+        Aquí va el mensaje.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
     <div class="d-flex justify-content-end mt-3">
       <button class="btn btn-danger" id="logout-btn">Cerrar sesión</button>
     </div>
-
-    
-
-    <h3 class="mt-4 text-center">Lista de Productos</h3>
-    <!-- Botón "Agregar..." solo visible para Admin y Encargado -->
-<?php if ($userRole == 1 || $userRole == 2): ?>
-  <div class="d-flex justify-content-end mt-3">
-    <button class="btn btn-success" id="agregar-btn">Agregar...</button>
-  </div>
-<?php endif; ?>
-  <div id="productos" class="table-responsive mt-3 mx-auto">
-        <table class="table table-bordered text-center" style="max-width: 100%;">  <!-- Agregado el max-width -->
-            <thead class="table-dark">
-          <tr>
-            <th>ID</th>
-            <th>Categoría</th>
-            <th>Nombre</th>
-            <th>Código</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Descripción</th>
-            <th>Estado</th>
-            <?php if ($userRole == 1 || $userRole == 2): // Administrador o Encargado ?>
-              <th>Acciones</th>
-            <?php endif; ?>
-          </tr>
-        </thead>
-        <tbody id="productos-tbody">
-          <!-- Productos cargados dinámicamente aquí -->
-        </tbody>
-      </table>
-        </div>
   </div>
 
-  <!-- Modal de confirmación -->
-<div id="modalConfirmacion" class="modal" style="display:none;">
-  <div class="modal-content">
-    <span id="btnCancelar" class="close">&times;</span>
-    <h3>¿Estás seguro de que deseas eliminar este producto?</h3>
-    <button id="btnConfirmar">Sí, eliminar</button>
-  </div>
-</div>
-  <!-- Tabla de productos -->
-  
+  <div class="container mt-5">
+    <h3 class="text-center">Registrar Cliente</h3>
+    <form id="form-proveedor" class="mt-4">
+      <input type="hidden" name="tipo_persona" id="tipo_persona" value="Cliente">
 
-  <!-- Modal para errores -->
-  <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="errorModalLabel">Error</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="nombre" name="nombre" required>
         </div>
-        <div class="modal-body" id="error-message">
-          <!-- Mensaje de error será insertado aquí -->
+        <div class="col-md-6 mb-3">
+          <label for="tipo_documento" class="form-label">Tipo de Documento</label>
+          <select class="form-select" id="tipo_documento" name="tipo_documento">
+            <option value="DNI">DNI</option>
+            <option value="RUC">RUC</option>
+            <option value="Pasaporte">Pasaporte</option>
+          </select>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-        </div>
-        <div>
-           
       </div>
-    </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="num_documento" class="form-label">Número de Documento</label>
+          <input type="text" class="form-control" id="num_documento" name="num_documento">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="direccion" class="form-label">Dirección</label>
+          <input type="text" class="form-control" id="direccion" name="direccion">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="telefono" class="form-label">Teléfono</label>
+          <input type="text" class="form-control" id="telefono" name="telefono">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="email" class="form-label">Correo Electrónico</label>
+          <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-center">
+      <button type="button" class="btn btn-primary" id="submitButton">Aceptar</button>
+
+      </div>
+    </form>
   </div>
 
- 
-
+  
 
 
 
@@ -226,72 +232,92 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
       `;
   }
 
-  // Cargar productos
-  // Cargar productos
-fetch('http://localhost:5000/api/productos/productos', {
-  method: 'GET',
-  headers: {
-    'Authorization': 'Bearer <?php echo $_SESSION['token']; ?>',
-    'Content-Type': 'application/json'
-  }
+  document.addEventListener('DOMContentLoaded', function() {
+  const submitButton = document.getElementById('submitButton');
+  
+  // Verifica si el botón existe en el DOM
+  if (submitButton) {
+    submitButton.addEventListener('click', () => {
+      // Capturar valores del formulario
+      const tipo_persona = document.getElementById('tipo_persona').value.trim();
+      const nombre = document.getElementById('nombre').value.trim();
+      const tipo_documento = document.getElementById('tipo_documento').value.trim();
+      const num_documento = document.getElementById('num_documento').value.trim();
+      const direccion = document.getElementById('direccion').value.trim();
+      const telefono = document.getElementById('telefono').value.trim();
+      const email = document.getElementById('email').value.trim();
+
+      // Validar campos requeridos
+      if (!nombre || !email) {
+        showMessageModal('Por favor, complete todos los campos obligatorios.');
+        return;
+      }
+
+      // Crear el objeto de datos
+      const formData = {
+        tipo_persona,
+        nombre,
+        tipo_documento,
+        num_documento,
+        direccion,
+        telefono,
+        email,
+      };
+
+      // Enviar datos al servidor usando Fetch API
+      fetch('http://localhost:5000/api/personas/insertar-comprador', {
+    method: 'POST',
+    headers: {
+        'Authorization': 'Bearer <?php echo $_SESSION['token']; ?>',
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData) // Enviar los datos del formulario al servidor
 })
-.then(response => response.json())
+.then(response => response.json())  // Procesar la respuesta en formato JSON
 .then(data => {
-  if (data.error) {
-    alert('Error al cargar los productos: ' + data.error);
-    return;
-  }
-
-  const productosBody = document.getElementById('productos-tbody');
-  productosBody.innerHTML = ''; // Limpia la tabla antes de agregar productos
-
-  data.forEach(producto => {
-  const row = document.createElement('tr');
-  row.innerHTML = `
-    <td>${producto.idarticulo}</td>
-    <td>${producto.categoria}</td>
-    <td>${producto.nombre}</td>
-    <td>${producto.codigo || 'N/A'}</td>
-    <td>${producto.precio_venta}</td>
-    <td>${producto.stock}</td>
-    <td>${producto.descripcion || 'Sin descripción'}</td>
-    <td>${producto.estado.data[0] === 1 ? 'Activo' : 'Eliminado'}</td>
-    <?php if ($userRole == 1 || $userRole == 2): // Administrador o Encargado ?>
-    <td class="d-flex justify-content-center">
-  <button class="btn btn-warning btn-sm me-2" onclick="editarProducto(${producto.idarticulo})">Editar</button>
-  <button class="btn btn-danger btn-sm btn-eliminar" data-id="${producto.idarticulo}">Eliminar</button>
-</td>
-
-
-    <?php endif; ?>
-    
-  `;
-
-  // Aquí verificamos si el estado es 0 (eliminado) y luego ocultamos el botón de eliminar
-  if (producto.estado.data[0] === 0) {
-    // Accedemos al botón de eliminar y lo ocultamos
-    const btnEliminar = row.querySelector('.btn-eliminar');
-    if (btnEliminar) {
-      btnEliminar.style.display = 'none';
+    if (data.success) {
+        setTimeout(() => {
+            window.location.href = 'personas.php'; // Redirige después de 2 segundos
+        }, 2000); 
+    } else {
+        // Si hay un error, muestra un mensaje de error que viene del backend
+        const errorMessage = data.message || 'Hubo un error al registrar el cliente. Intenta nuevamente.';
+        showMessageModal(errorMessage);
     }
+})
+.catch(error => {
+    // Manejo de errores de la petición Fetch
+    console.error('Error:', error);
+    showMessageModal('Error al enviar los datos. Intenta nuevamente.');
+});
+    });
   }
 
-  productosBody.appendChild(row);
+  // Función para mostrar el modal con el mensaje
+  function showMessageModal(message) {
+    const modalBody = document.getElementById('messageModalBody');
+    modalBody.innerHTML = message;
+    const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+    messageModal.show();
+
+    // Asegurarse de que el modal se cierre después de unos segundos
+    setTimeout(() => {
+      messageModal.hide();
+    }, 3000); // Cierra el modal después de 3 segundos
+  }
 });
 
-})
-.catch(error => console.error('Error:', error));
-
-
-
-  // Cerrar sesión
-  document.getElementById('logout-btn').addEventListener('click', () => {
+document.getElementById('logout-btn').addEventListener('click', () => {
     window.location.href = 'logout.php';  // Redirige a logout.php para cerrar la sesión
   });
+
+
+
+
 </script>
 
-
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<!-- JavaScript necesario para el funcionamiento de Bootstrap (modal, etc.) -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

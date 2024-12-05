@@ -32,7 +32,7 @@ unset($_SESSION['error_message']); // Limpiar el mensaje después de mostrarlo
           </div>
           
           <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+            <button type="submit" class="btn btn-success">Iniciar sesión</button>
           </div>
         </form>
       </div>

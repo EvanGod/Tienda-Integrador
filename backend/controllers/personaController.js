@@ -39,7 +39,7 @@ const insertarComprador = async (req, res) => {
 // Función para obtener todos los proveedores
 const obtenerProveedores = async (req, res) => {
     try {
-      const query = 'SELECT * FROM persona WHERE tipo_persona = "Proveedor" AND estado = 1';
+      const query = 'SELECT * FROM persona WHERE tipo_persona = "Proveedor"';
       const [rows] = await pool.query(query);
   
       res.status(200).json(rows);
@@ -52,7 +52,7 @@ const obtenerProveedores = async (req, res) => {
   // Función para obtener todos los compradores
   const obtenerCompradores = async (req, res) => {
     try {
-      const query = 'SELECT * FROM persona WHERE tipo_persona = "Cliente" AND estado = 1';
+      const query = 'SELECT * FROM persona WHERE tipo_persona = "Cliente"';
       const [rows] = await pool.query(query);
   
       res.status(200).json(rows);

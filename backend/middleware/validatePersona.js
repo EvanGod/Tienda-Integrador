@@ -14,11 +14,7 @@ const validatePersona = async (req, res, next) => {
     return res.status(400).json({ message: "El nombre de la persona es obligatorio." });
   }
 
-  // Validación de documento
-  if (!tipo_documento || !num_documento) {
-    return res.status(400).json({ message: "El tipo y número de documento son obligatorios." });
-  }
-
+  
   // Validación de teléfono (opcional)
   if (telefono && !/^\d{9,15}$/.test(telefono)) {
     return res.status(400).json({ message: "El teléfono debe ser un número válido de entre 9 y 15 dígitos." });
