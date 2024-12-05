@@ -7,13 +7,13 @@ const validateProduct = require('../middleware/validateProducto');  // Validaci√
 
 
 // Solo los roles 'Encargado' y 'Administrador' pueden crear productos
-router.post('/productos', verifyToken, checkRole(['Encargado', 'Administrador']), validateProduct, productoController.crearProducto);
+router.post('/productos', verifyToken, checkRole([2, 1]), validateProduct, productoController.crearProducto);
 
 // Solo los roles 'Encargado' y 'Administrador' pueden actualizar productos
-router.put('/productos/:idarticulo', verifyToken, checkRole(['Encargado', 'Administrador']), validateProduct, productoController.actualizarProducto);
+router.put('/productos/:idarticulo', verifyToken, checkRole([2, 1]), validateProduct, productoController.actualizarProducto);
 
 // Solo los roles 'Encargado' y 'Administrador' pueden eliminar productos
-router.delete('/productos/:idarticulo', verifyToken, checkRole(['Encargado', 'Administrador']), productoController.eliminarProducto);
+router.delete('/productos/:idarticulo', verifyToken, checkRole([2, 1]), productoController.eliminarProducto);
 
 // Los productos pueden ser le√≠dos por cualquier usuario autenticado
 router.get('/productos', verifyToken, productoController.obtenerProductos);
