@@ -1,7 +1,7 @@
 // controllers/authController.js
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { getUserByEmail, comparePassword, createUser, getRoleIdByName } = require('../models/userModel');
+const { getUserByEmail, comparePassword, createUser, getRoleIdByName, getUsersByRole } = require('../models/userModel');
 
 // Función para login
 const login = async (req, res) => {
@@ -95,6 +95,15 @@ const register = async (req, res) => {
   }
 };
 
+const getUsers = async (req, res) => {
+  try {
+    const users = await getUsersByRole(); // Obtiene los usuarios ordenados por idrol
+    res.json(users);
+  } catch (error) {
+    console.error('Error al obtener usuarios:', error);
+    res.status(500).json({ message: 'Error del servidor al obtener los usuarios' });
+  }
+};
 
 
-module.exports = { login, register };
+module.exports = { login, register, getUsers };

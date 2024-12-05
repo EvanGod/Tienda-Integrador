@@ -37,4 +37,16 @@ const createUser = async ({ nombre, tipo_documento, num_documento, direccion, te
 };
 
 
-module.exports = { getUserByEmail, comparePassword, createUser, getRoleIdByName};
+const getUsersByRole = async () => {
+  // Consulta para obtener usuarios con idrol 2 y 3
+  const query = 'SELECT * FROM usuario WHERE idrol IN (2, 3)';
+  const [rows] = await db.execute(query);
+  
+  // Ordenar los usuarios por idrol (de menor a mayor)
+  const sortedUsers = rows.sort((a, b) => a.idrol - b.idrol);
+  
+  return sortedUsers;
+};
+
+
+module.exports = { getUserByEmail, comparePassword, createUser, getRoleIdByName, getUsersByRole};
