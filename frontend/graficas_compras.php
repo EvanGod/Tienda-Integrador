@@ -25,7 +25,7 @@ if (!$user) {
 }
 
 $userRole = $user['role'];  // Obtén el rol del usuario desde el token
-if ($userRole != 1 && $userRole != 3) {
+if ($userRole != 1 && $userRole != 2) {
     header('Location: dashboard.php');  // Redirige al login si no hay token
     exit();
 }
@@ -36,7 +36,7 @@ if ($userRole != 1 && $userRole != 3) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grafica de ventas</title>
+  <title>Graficas ingresos</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/styles.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
@@ -59,19 +59,19 @@ if ($userRole != 1 && $userRole != 3) {
     </div>
 
     <div class="container mt-5">
-  <h3>Gráfica de Ventas por Productos</h3>
+  <h3>Gráfica de Ingresos por Productos</h3>
   <!-- Canvas para la gráfica de ventas por productos -->
-<canvas id="ventasPorProductoChart" width="400" height="200"></canvas>
+<canvas id="ingresosPorProductoChart" width="400" height="200"></canvas>
 
 </div>
 
 
     <div class="container mt-5">
-  <h3>Gráficas de Ventas</h3>
- 
+  <h3>Gráficas de Ingresos</h3>
+  <!-- Formulario para seleccionar la fecha -->
   
   <!-- Canvas para la gráfica -->
-  <canvas id="ventasChart" width="400" height="200"></canvas>
+  <canvas id="ingresosChart" width="400" height="200"></canvas>
 </div>
 
 
@@ -212,88 +212,61 @@ if ($userRole != 1 && $userRole != 3) {
       </div>
       `;
   }
-// Realizar la solicitud para obtener las ventas por día al cargar la página
-window.onload = function() {
-  // Enviar la solicitud al backend para obtener las ventas
-  fetch('http://localhost:5000/api/ventas/ventas/por-dia', {  // La URL ya no necesita el parámetro de fecha
-    method: 'GET',
-    headers: {
-      'Authorization': 'Bearer ' + token  // Pasa el token de autenticación
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.error) {
-      showError(data.error);
-    } else {
-      // Actualiza la gráfica con los datos recibidos
-      actualizarGrafica(data);
-    }
-  })
-  .catch(error => {
-    console.error('Error al obtener las ventas:', error);
-    showError('Error al obtener las ventas.');
-  });
+// Función para obtener los ingresos por día desde el backend
+async function obtenerIngresosPorDia() {
+  try {
+    const response = await fetch('http://localhost:5000/api/ingresos/ingresos/dia', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,  // Pasa el token como Bearer en la cabecera
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error al obtener ingresos por día:', error);
+  }
 }
 
-// Función para mostrar un mensaje de error en un modal
-function showError(message) {
-  const errorMessageElement = document.getElementById('error-message');
-  errorMessageElement.textContent = message;
-
-  const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-  errorModal.show();
-
-  // Cerrar el modal después de 2 segundos
-  setTimeout(() => {
-    errorModal.hide();
-  }, 2000);  // 2000 milisegundos = 2 segundos
+// Función para obtener los ingresos por producto desde el backend
+async function obtenerIngresosPorProducto() {
+  try {
+    const response = await fetch('http://localhost:5000/api/ingresos/ingresos/producto', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,  // Pasa el token como Bearer en la cabecera
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error al obtener ingresos por producto:', error);
+  }
 }
 
-function actualizarGrafica(data) {
-  console.log('Datos recibidos:', data);  // Verifica los datos que recibes del backend
+// Función para generar la gráfica de ventas
+async function generarGraficaVentas() {
+  const ingresosPorDia = await obtenerIngresosPorDia();
+  const fechas = ingresosPorDia.map(item => item.fecha);
+  const totales = ingresosPorDia.map(item => item.total);
 
-  const fechas = data.map(item => item.fecha);
-  const totalVentas = data.map(item => item.total_ventas);
-  const montoTotal = data.map(item => item.monto_total);
-
-  console.log('Fechas:', fechas);
-  console.log('Total Ventas:', totalVentas);
-  console.log('Monto Total:', montoTotal);
-
-  // Verifica si las listas no están vacías
-  if (fechas.length === 0 || totalVentas.length === 0 || montoTotal.length === 0) {
-    showError('No hay datos para mostrar en la gráfica');
-    return;
-  }
-
-  const ctx = document.getElementById('ventasChart').getContext('2d');
-
-  // Destruir el gráfico anterior si existe
-  if (window.ventasChart instanceof Chart) {
-    window.ventasChart.destroy();
-  }
-
-  // Crear un nuevo gráfico
-  window.ventasChart = new Chart(ctx, {
-    type: 'bar',
+  const ctx = document.getElementById('ingresosChart').getContext('2d');
+  const ventasChart = new Chart(ctx, {
+    type: 'line', // O 'bar' dependiendo del tipo de gráfica
     data: {
       labels: fechas,
       datasets: [{
-        label: 'Ventas Totales',
-        data: totalVentas,
-        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1
-      }, {
-        label: 'Monto Total',
-        data: montoTotal,
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1
+        label: 'Ingresos por Día',
+        data: totales,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+        fill: false
       }]
     },
     options: {
+      responsive: true,
       scales: {
         y: {
           beginAtZero: true
@@ -303,73 +276,28 @@ function actualizarGrafica(data) {
   });
 }
 
+// Función para generar la gráfica de ingresos por producto
+async function generarGraficaIngresosPorProducto() {
+  const ingresosPorProducto = await obtenerIngresosPorProducto();
+  const nombresProductos = ingresosPorProducto.map(item => item.nombre);
+  const cantidades = ingresosPorProducto.map(item => item.cantidad);
+  const totales = ingresosPorProducto.map(item => item.total);
 
-/// Función para obtener ventas por productos
-function obtenerVentasPorProducto() {
-  fetch('http://localhost:5000/api/ventas/ventas/por-producto', {  // Cambia la ruta si es necesario
-    method: 'GET',
-    headers: {
-      'Authorization': 'Bearer ' + token  // Pasa el token de autenticación
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.error) {
-      showError(data.error);
-    } else {
-      // Actualiza la gráfica con los datos de ventas por producto
-      actualizarGraficaVentasPorProducto(data);
-    }
-  })
-  .catch(error => {
-    console.error('Error al obtener las ventas por producto:', error);
-    showError('Error al obtener las ventas por producto.');
-  });
-}
-
-// Función para actualizar la gráfica de ventas por producto
-function actualizarGraficaVentasPorProducto(data) {
-  const productos = data.map(item => item.producto);
-  const totalVendido = data.map(item => item.total_vendido);
-  const ingresosGenerados = data.map(item => item.ingresos_generados);
-
-  console.log('Productos:', productos);
-  console.log('Total Vendido:', totalVendido);
-  console.log('Ingresos Generados:', ingresosGenerados);
-
-  // Verifica si las listas no están vacías
-  if (productos.length === 0 || totalVendido.length === 0 || ingresosGenerados.length === 0) {
-    showError('No hay datos para mostrar en la gráfica de ventas por productos');
-    return;
-  }
-
-  const ctx = document.getElementById('ventasPorProductoChart').getContext('2d');
-
-  // Destruir el gráfico anterior si existe
-  if (window.ventasPorProductoChart instanceof Chart) {
-    window.ventasPorProductoChart.destroy();
-  }
-
-  // Crear un nuevo gráfico
-  window.ventasPorProductoChart = new Chart(ctx, {
-    type: 'bar',
+  const ctx = document.getElementById('ingresosPorProductoChart').getContext('2d');
+  const ventasPorProductoChart = new Chart(ctx, {
+    type: 'bar', // O 'pie', dependiendo del tipo de gráfica
     data: {
-      labels: productos,
+      labels: nombresProductos,
       datasets: [{
-        label: 'Total Vendido',
-        data: totalVendido,
+        label: 'Ingresos por Producto',
+        data: totales,
         backgroundColor: 'rgba(54, 162, 235, 0.2)',
         borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1
-      }, {
-        label: 'Ingresos Generados',
-        data: ingresosGenerados,
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        borderColor: 'rgba(255, 99, 132, 1)',
         borderWidth: 1
       }]
     },
     options: {
+      responsive: true,
       scales: {
         y: {
           beginAtZero: true
@@ -379,17 +307,11 @@ function actualizarGraficaVentasPorProducto(data) {
   });
 }
 
-// Llamar a la función para cargar la gráfica de ventas por producto
-obtenerVentasPorProducto();
-
-
-// Llamar a la función para obtener las ventas por producto cuando se cargue la página
-document.addEventListener('DOMContentLoaded', function() {
-  obtenerVentasPorProducto();  // Llamar la función al cargar la página
-});
-
-
-
+// Ejecuta las funciones para generar las gráficas cuando se cargue la página
+window.onload = () => {
+  generarGraficaVentas();
+  generarGraficaIngresosPorProducto();
+};
 
 
   // Cerrar sesión
