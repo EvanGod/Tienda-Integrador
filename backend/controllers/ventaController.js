@@ -69,7 +69,7 @@ exports.registrarVenta = async (req, res) => {
 
 // Obtener ventas por día
 exports.obtenerVentasPorDia = async (req, res) => {
-    const { fecha } = req.query;
+    const { fecha } = req.params;
 
     try {
         const [result] = await pool.query(queriesVenta.ventasPorDia, [fecha]);

@@ -8,10 +8,10 @@ const checkRole = require('../middleware/roleMiddleware');
 router.post('/ventas', verifyToken, checkRole([3, 1]), ventaController.registrarVenta);
 
 // Obtener ventas por día
-router.get('/ventas/por-dia', verifyToken, checkRole([1]), ventaController.obtenerVentasPorDia);
+router.get('/ventas/por-dia/:fecha', verifyToken, checkRole([1, 3]), ventaController.obtenerVentasPorDia);
 
 // Obtener ventas por producto
-router.get('/ventas/por-producto', verifyToken, checkRole([1]), ventaController.obtenerVentasPorProducto);
+router.get('/ventas/por-producto', verifyToken, checkRole([1, 3]), ventaController.obtenerVentasPorProducto);
 
 // Obtener ID de usuario
 router.get('/ventas/id-usuario', verifyToken, checkRole([3, 1]), ventaController.obtenerIdUsuario);

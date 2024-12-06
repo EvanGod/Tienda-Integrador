@@ -157,7 +157,7 @@ if ($userRole != 1) {
   if (userRole === 1) { // Administrador
     header.innerHTML = '<h3><a href="dashboard.php" style="text-decoration: none; color: black;">Panel de Administrador</a></h3>';
     content.innerHTML = `
-      <div class="col-md-3" onclick="window.location.href='graficas.php'">
+      <div class="col-md-3" onclick="window.location.href='graficas_compras.php'">
         <div class="card">
           <div class="card-body">
             <i class="fas fa-chart-line fa-3x" title="Gráficas de Compras"></i>
