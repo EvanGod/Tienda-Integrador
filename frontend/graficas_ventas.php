@@ -25,7 +25,7 @@ if (!$user) {
 }
 
 $userRole = $user['role'];  // Obtén el rol del usuario desde el token
-if ($userRole != 1) {
+if ($userRole != 1 && $userRole != 3) {
     header('Location: dashboard.php');  // Redirige al login si no hay token
     exit();
 }
@@ -36,10 +36,11 @@ if ($userRole != 1) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personas</title>
+  <title>Grafica de ventas</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/styles.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="container mt-5">
@@ -57,30 +58,26 @@ if ($userRole != 1) {
       <button class="btn btn-danger" id="logout-btn">Cerrar sesión</button>
     </div>
 
+    <div class="container mt-5">
+  <h3>Gráfica de Ventas por Productos</h3>
+  <!-- Canvas para la gráfica de ventas por productos -->
+<canvas id="ventasPorProductoChart" width="400" height="200"></canvas>
+
+</div>
+
+
+    <div class="container mt-5">
+  <h3>Gráficas de Ventas</h3>
+ 
+  
+  <!-- Canvas para la gráfica -->
+  <canvas id="ventasChart" width="400" height="200"></canvas>
+</div>
+
+
+
            
-        <h4 class="mt-4 text-center">Lista de Usuarios</h4>
-        
-            <div class="d-flex justify-content-end mt-3">
-            <button class="btn btn-success" id="agregar-proveedores" onclick="window.location.href='agregar_usuario.php'">Agregar...</button>
-            </div>
-        <div id="usuarios" class="table-responsive mt-3 mx-auto">
-        <table class="table table-bordered text-center" style="max-width: 100%;">  <!-- Agregado el max-width -->
-            <thead class="table-dark">
-          <tr>
-            <th>ID</th>
-            <th>Rol</th>
-            <th>Nombre</th>
-            <th>Documento</th>
-            <th># Documento</th>
-            <th>Direccion</th>
-            <th>Telefono</th>
-            <th>Email</th>
-          </tr>
-        </thead>
-        <tbody id="usuarios-tbody">
-                  </tbody>
-      </table>
-        </div>
+       
   
 
 
@@ -215,47 +212,184 @@ if ($userRole != 1) {
       </div>
       `;
   }
+// Realizar la solicitud para obtener las ventas por día al cargar la página
+window.onload = function() {
+  // Enviar la solicitud al backend para obtener las ventas
+  fetch('http://localhost:5000/api/ventas/ventas/por-dia', {  // La URL ya no necesita el parámetro de fecha
+    method: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + token  // Pasa el token de autenticación
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.error) {
+      showError(data.error);
+    } else {
+      // Actualiza la gráfica con los datos recibidos
+      actualizarGrafica(data);
+    }
+  })
+  .catch(error => {
+    console.error('Error al obtener las ventas:', error);
+    showError('Error al obtener las ventas.');
+  });
+}
 
-  
-fetch('http://localhost:5000/api/auth/usuarios', {
-  method: 'GET',
-  headers: {
-    'Authorization': 'Bearer <?php echo $_SESSION['token']; ?>',
-    'Content-Type': 'application/json'
-  }
-})
-.then(response => response.json())
-.then(data => {
-  if (data.error) {
-    alert('Error al cargar los usuarios: ' + data.error);
+// Función para mostrar un mensaje de error en un modal
+function showError(message) {
+  const errorMessageElement = document.getElementById('error-message');
+  errorMessageElement.textContent = message;
+
+  const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+  errorModal.show();
+
+  // Cerrar el modal después de 2 segundos
+  setTimeout(() => {
+    errorModal.hide();
+  }, 2000);  // 2000 milisegundos = 2 segundos
+}
+
+function actualizarGrafica(data) {
+  console.log('Datos recibidos:', data);  // Verifica los datos que recibes del backend
+
+  const fechas = data.map(item => item.fecha);
+  const totalVentas = data.map(item => item.total_ventas);
+  const montoTotal = data.map(item => item.monto_total);
+
+  console.log('Fechas:', fechas);
+  console.log('Total Ventas:', totalVentas);
+  console.log('Monto Total:', montoTotal);
+
+  // Verifica si las listas no están vacías
+  if (fechas.length === 0 || totalVentas.length === 0 || montoTotal.length === 0) {
+    showError('No hay datos para mostrar en la gráfica');
     return;
   }
 
-  const usuariosBody = document.getElementById('usuarios-tbody');
-  usuariosBody.innerHTML = ''; // Limpia la tabla antes de agregar usuarios
+  const ctx = document.getElementById('ventasChart').getContext('2d');
 
-  data.forEach(usuario => {
-  const row = document.createElement('tr');
-  row.innerHTML = `
-    <td>${usuario.idusuario}</td>
-    <td>
-          ${usuario.idrol === 2 ? 'Encargado' : usuario.idrol === 3 ? 'Empleado' : 'Otro rol'}
-        </td>
-    <td>${usuario.nombre}</td>
-    <td>${usuario.tipo_documento === null ? '' : usuario.tipo_documento}</td>
-    <td>${usuario.num_documento === null ? '' : usuario.num_documento }</td>
-    <td>${usuario.direccion== null ? '' : usuario.direccion}</td>
-    <td>${usuario.telefono== null ? '' : usuario.telefono}</td>
-    <td>${usuario.email}</td>
-    
-  `;
+  // Destruir el gráfico anterior si existe
+  if (window.ventasChart instanceof Chart) {
+    window.ventasChart.destroy();
+  }
+
+  // Crear un nuevo gráfico
+  window.ventasChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: fechas,
+      datasets: [{
+        label: 'Ventas Totales',
+        data: totalVentas,
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }, {
+        label: 'Monto Total',
+        data: montoTotal,
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
 
 
-  usuariosBody.appendChild(row);
+/// Función para obtener ventas por productos
+function obtenerVentasPorProducto() {
+  fetch('http://localhost:5000/api/ventas/ventas/por-producto', {  // Cambia la ruta si es necesario
+    method: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + token  // Pasa el token de autenticación
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.error) {
+      showError(data.error);
+    } else {
+      // Actualiza la gráfica con los datos de ventas por producto
+      actualizarGraficaVentasPorProducto(data);
+    }
+  })
+  .catch(error => {
+    console.error('Error al obtener las ventas por producto:', error);
+    showError('Error al obtener las ventas por producto.');
+  });
+}
+
+// Función para actualizar la gráfica de ventas por producto
+function actualizarGraficaVentasPorProducto(data) {
+  const productos = data.map(item => item.producto);
+  const totalVendido = data.map(item => item.total_vendido);
+  const ingresosGenerados = data.map(item => item.ingresos_generados);
+
+  console.log('Productos:', productos);
+  console.log('Total Vendido:', totalVendido);
+  console.log('Ingresos Generados:', ingresosGenerados);
+
+  // Verifica si las listas no están vacías
+  if (productos.length === 0 || totalVendido.length === 0 || ingresosGenerados.length === 0) {
+    showError('No hay datos para mostrar en la gráfica de ventas por productos');
+    return;
+  }
+
+  const ctx = document.getElementById('ventasPorProductoChart').getContext('2d');
+
+  // Destruir el gráfico anterior si existe
+  if (window.ventasPorProductoChart instanceof Chart) {
+    window.ventasPorProductoChart.destroy();
+  }
+
+  // Crear un nuevo gráfico
+  window.ventasPorProductoChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: productos,
+      datasets: [{
+        label: 'Total Vendido',
+        data: totalVendido,
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }, {
+        label: 'Ingresos Generados',
+        data: ingresosGenerados,
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+// Llamar a la función para cargar la gráfica de ventas por producto
+obtenerVentasPorProducto();
+
+
+// Llamar a la función para obtener las ventas por producto cuando se cargue la página
+document.addEventListener('DOMContentLoaded', function() {
+  obtenerVentasPorProducto();  // Llamar la función al cargar la página
 });
 
-})
-.catch(error => console.error('Error:', error));
+
+
 
 
   // Cerrar sesión

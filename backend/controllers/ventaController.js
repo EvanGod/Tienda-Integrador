@@ -66,20 +66,16 @@ exports.registrarVenta = async (req, res) => {
         res.status(500).json({ message: 'Error del servidor' });
     }
 };
-
-// Obtener ventas por día
 exports.obtenerVentasPorDia = async (req, res) => {
-    const { fecha } = req.query;
-
     try {
-        const [result] = await pool.query(queriesVenta.ventasPorDia, [fecha]);
+        // Ejecutar la consulta sin parámetros, ya que no se necesita fecha
+        const [result] = await pool.query(queriesVenta.ventasPorDia);
         res.status(200).json(result);
     } catch (error) {
         console.error('Error al obtener ventas por día:', error);
         res.status(500).json({ message: 'Error del servidor' });
     }
 };
-
 // Obtener ventas por producto
 exports.obtenerVentasPorProducto = async (req, res) => {
     try {

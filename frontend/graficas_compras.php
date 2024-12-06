@@ -25,8 +25,7 @@ if (!$user) {
 }
 
 $userRole = $user['role'];  // Obtén el rol del usuario desde el token
-
-if ($userRole != 2) {
+if ($userRole != 1 && $userRole != 2) {
     header('Location: dashboard.php');  // Redirige al login si no hay token
     exit();
 }
@@ -37,10 +36,11 @@ if ($userRole != 2) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Proveedores</title>
+  <title>Graficas ingresos</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/styles.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="container mt-5">
@@ -52,75 +52,60 @@ if ($userRole != 2) {
 <div class="row mt-4 justify-content-center text-center" id="content">
   <!-- Los iconos y textos se generarán dinámicamente -->
 </div>
-<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="messageModalLabel">Mensaje</h5>
-      </div>
-      <div class="modal-body" id="messageModalBody">
-        Aquí va el mensaje.
-      </div>
-    </div>
-  </div>
-</div>
 
 
     <div class="d-flex justify-content-end mt-3">
       <button class="btn btn-danger" id="logout-btn">Cerrar sesión</button>
     </div>
-  </div>
 
-  <div class="container mt-5">
-    <h3 class="text-center">Registrar Proveedor</h3>
-    <form id="form-proveedor" class="mt-4">
-      <input type="hidden" name="tipo_persona" id="tipo_persona" value="Proveedor">
+    <div class="container mt-5">
+  <h3>Gráfica de Ingresos por Productos</h3>
+  <!-- Canvas para la gráfica de ventas por productos -->
+<canvas id="ingresosPorProductoChart" width="400" height="200"></canvas>
 
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="nombre" name="nombre" required>
-        </div>
-        <div class="col-md-6 mb-3">
-          <label for="tipo_documento" class="form-label">Tipo de Documento</label>
-          <select class="form-select" id="tipo_documento" name="tipo_documento">
-            <option value="DNI">DNI</option>
-            <option value="RUC">RUC</option>
-            <option value="Pasaporte">Pasaporte</option>
-          </select>
-        </div>
-      </div>
+</div>
 
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label for="num_documento" class="form-label">Número de Documento</label>
-          <input type="text" class="form-control" id="num_documento" name="num_documento">
-        </div>
-        <div class="col-md-6 mb-3">
-          <label for="direccion" class="form-label">Dirección</label>
-          <input type="text" class="form-control" id="direccion" name="direccion">
-        </div>
-      </div>
 
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label for="telefono" class="form-label">Teléfono</label>
-          <input type="text" class="form-control" id="telefono" name="telefono">
-        </div>
-        <div class="col-md-6 mb-3">
-          <label for="email" class="form-label">Correo Electrónico</label>
-          <input type="email" class="form-control" id="email" name="email" required>
-        </div>
-      </div>
-
-      <div class="d-flex justify-content-center">
-      <button type="button" class="btn btn-primary" id="submitButton">Aceptar</button>
-
-      </div>
-    </form>
-  </div>
-
+    <div class="container mt-5">
+  <h3>Gráficas de Ingresos</h3>
+  <!-- Formulario para seleccionar la fecha -->
   
+  <!-- Canvas para la gráfica -->
+  <canvas id="ingresosChart" width="400" height="200"></canvas>
+</div>
+
+
+
+           
+       
+  
+
+
+  </div>
+ 
+
+  <!-- Modal para errores -->
+  <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="errorModalLabel">Error</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="error-message">
+          <!-- Mensaje de error será insertado aquí -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+        <div>
+           
+      </div>
+    </div>
+  </div>
+
+ 
+
 
 
 
@@ -227,98 +212,116 @@ if ($userRole != 2) {
       </div>
       `;
   }
-
-  document.addEventListener('DOMContentLoaded', function() {
-  const submitButton = document.getElementById('submitButton');
-  
-  // Verifica si el botón existe en el DOM
-  if (submitButton) {
-    submitButton.addEventListener('click', () => {
-      // Capturar valores del formulario
-      const tipo_persona = document.getElementById('tipo_persona').value.trim();
-      const nombre = document.getElementById('nombre').value.trim();
-      const tipo_documento = document.getElementById('tipo_documento').value.trim();
-      const num_documento = document.getElementById('num_documento').value.trim();
-      const direccion = document.getElementById('direccion').value.trim();
-      const telefono = document.getElementById('telefono').value.trim();
-      const email = document.getElementById('email').value.trim();
-
-      // Validar campos requeridos
-      if (!nombre || !email) {
-        showMessageModal('Por favor, complete todos los campos obligatorios.');
-        return;
-      }
-
-      // Crear el objeto de datos
-      const formData = {
-        tipo_persona,
-        nombre,
-        tipo_documento,
-        num_documento,
-        direccion,
-        telefono,
-        email,
-      };
-
-      // Enviar datos al servidor usando Fetch API
-      fetch('http://localhost:5000/api/personas/insertar-proveedor', {
-    method: 'POST',
-    headers: {
-        'Authorization': 'Bearer <?php echo $_SESSION['token']; ?>',
+// Función para obtener los ingresos por día desde el backend
+async function obtenerIngresosPorDia() {
+  try {
+    const response = await fetch('http://localhost:5000/api/ingresos/ingresos/dia', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,  // Pasa el token como Bearer en la cabecera
         'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(formData) // Enviar los datos del formulario al servidor
-})
-.then(response => response.json())  // Procesar la respuesta en formato JSON
-.then(data => {
-    if (data.success) {
-        setTimeout(() => {
-            // Cerrar el modal con el método de Bootstrap
-            const modal = new bootstrap.Modal(document.getElementById('messageModal'));
-            modal.hide();
-            
-            // Redirigir a personas.php después de cerrar el modal
-            window.location.href = 'personas.php';
-          }, 2000);
-    } else {
-        // Si hay un error, muestra un mensaje de error que viene del backend
-        const errorMessage = data.message || 'Hubo un error al registrar el proveedor. Intenta nuevamente.';
-        showMessageModal(errorMessage);
-    }
-})
-.catch(error => {
-    // Manejo de errores de la petición Fetch
-    console.error('Error:', error);
-    showMessageModal('Error al enviar los datos. Intenta nuevamente.');
-});
+      }
     });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error al obtener ingresos por día:', error);
   }
+}
 
-  // Función para mostrar el modal con el mensaje
-  function showMessageModal(message) {
-    const modalBody = document.getElementById('messageModalBody');
-    modalBody.innerHTML = message;
-    const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
-    messageModal.show();
-
-    // Asegurarse de que el modal se cierre después de unos segundos
-    setTimeout(() => {
-      messageModal.hide();
-    }, 3000); // Cierra el modal después de 3 segundos
+// Función para obtener los ingresos por producto desde el backend
+async function obtenerIngresosPorProducto() {
+  try {
+    const response = await fetch('http://localhost:5000/api/ingresos/ingresos/producto', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,  // Pasa el token como Bearer en la cabecera
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error al obtener ingresos por producto:', error);
   }
-});
+}
 
-document.getElementById('logout-btn').addEventListener('click', () => {
+// Función para generar la gráfica de ventas
+async function generarGraficaVentas() {
+  const ingresosPorDia = await obtenerIngresosPorDia();
+  const fechas = ingresosPorDia.map(item => item.fecha);
+  const totales = ingresosPorDia.map(item => item.total);
+
+  const ctx = document.getElementById('ingresosChart').getContext('2d');
+  const ventasChart = new Chart(ctx, {
+    type: 'line', // O 'bar' dependiendo del tipo de gráfica
+    data: {
+      labels: fechas,
+      datasets: [{
+        label: 'Ingresos por Día',
+        data: totales,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+// Función para generar la gráfica de ingresos por producto
+async function generarGraficaIngresosPorProducto() {
+  const ingresosPorProducto = await obtenerIngresosPorProducto();
+  const nombresProductos = ingresosPorProducto.map(item => item.nombre);
+  const cantidades = ingresosPorProducto.map(item => item.cantidad);
+  const totales = ingresosPorProducto.map(item => item.total);
+
+  const ctx = document.getElementById('ingresosPorProductoChart').getContext('2d');
+  const ventasPorProductoChart = new Chart(ctx, {
+    type: 'bar', // O 'pie', dependiendo del tipo de gráfica
+    data: {
+      labels: nombresProductos,
+      datasets: [{
+        label: 'Ingresos por Producto',
+        data: totales,
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+// Ejecuta las funciones para generar las gráficas cuando se cargue la página
+window.onload = () => {
+  generarGraficaVentas();
+  generarGraficaIngresosPorProducto();
+};
+
+
+  // Cerrar sesión
+  document.getElementById('logout-btn').addEventListener('click', () => {
     window.location.href = 'logout.php';  // Redirige a logout.php para cerrar la sesión
   });
-
-
-
-
 </script>
 
-<!-- JavaScript necesario para el funcionamiento de Bootstrap (modal, etc.) -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

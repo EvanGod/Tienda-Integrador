@@ -6,8 +6,8 @@ exports.insertarVenta = `
 exports.ventasPorDia = `
     SELECT DATE(fecha_hora) AS fecha, COUNT(*) AS total_ventas, SUM(total) AS monto_total
     FROM venta
-    WHERE DATE(fecha_hora) = ?
     GROUP BY DATE(fecha_hora)
+    ORDER BY DATE(fecha_hora) DESC
 `;
 
 exports.ventasPorProducto = `
