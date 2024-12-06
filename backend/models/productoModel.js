@@ -29,6 +29,28 @@ const obtenerProductos = async () => {
   return result;
 };
 
+const obtenerProductosVenta = async () => {
+  const query = `
+    SELECT 
+      a.idarticulo, 
+      a.nombre, 
+      a.codigo, 
+      a.precio_venta, 
+      a.stock, 
+      a.descripcion, 
+      a.estado, 
+      c.nombre AS categoria 
+    FROM 
+      articulo a
+    JOIN 
+      categoria c ON a.idcategoria = c.idcategoria
+    WHERE 
+      a.estado = 1
+  `;
+  const [result] = await pool.execute(query);
+  return result;
+};
+
 
 // Obtener un producto por ID con el nombre de la categoría
 const obtenerProductoPorId = async (idarticulo) => {
@@ -71,4 +93,4 @@ const eliminarProducto = async (idarticulo) => {
   return result;
 };
 
-module.exports = { crearProducto, obtenerProductos, obtenerProductoPorId, actualizarProducto, eliminarProducto };
+module.exports = { crearProducto, obtenerProductos, obtenerProductoPorId, actualizarProducto, eliminarProducto, obtenerProductosVenta };

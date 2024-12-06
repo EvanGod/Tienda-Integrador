@@ -18,6 +18,9 @@ router.delete('/productos/:idarticulo', verifyToken, checkRole([2, 3]), producto
 // Los productos pueden ser leídos por cualquier usuario autenticado
 router.get('/productos', verifyToken, productoController.obtenerProductos);
 
+// Los productos pueden ser leídos por cualquier usuario autenticado
+router.get('/prod', verifyToken, productoController.obtenerProductosVenta);
+
 // Obtener producto por ID (cualquier usuario autenticado)
 router.get('/productos/:idarticulo', verifyToken, productoController.obtenerProductoPorId);
 

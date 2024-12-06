@@ -28,6 +28,17 @@ const obtenerProductos = async (req, res) => {
   }
 };
 
+// Obtener todos los productos
+const obtenerProductosVenta = async (req, res) => {
+  try {
+    const productos = await productoModel.obtenerProductosVenta();
+    res.status(200).json(productos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener productos' });
+  }
+};
+
 // Obtener un producto por ID
 const obtenerProductoPorId = async (req, res) => {
   try {
@@ -79,4 +90,4 @@ const eliminarProducto = async (req, res) => {
   }
 };
 
-module.exports = { crearProducto, obtenerProductos, obtenerProductoPorId, actualizarProducto, eliminarProducto };
+module.exports = { crearProducto, obtenerProductos, obtenerProductosVenta,obtenerProductoPorId, actualizarProducto, eliminarProducto };
