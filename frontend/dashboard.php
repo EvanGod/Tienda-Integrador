@@ -278,10 +278,89 @@ fetch('http://localhost:5000/api/productos/productos', {
 
   productosBody.appendChild(row);
 });
+// Aquí agregamos el evento después de cargar los productos
+document.querySelectorAll('.btn-eliminar').forEach(btn => {
+    console.log('Botón de eliminar encontrado');
+    btn.addEventListener('click', function() {
+      const idProducto = btn.getAttribute('data-id');
+      console.log(`ID Producto: ${idProducto}`);
+      mostrarModalConfirmacion(idProducto); // Mostrar el modal con el ID del producto
+    });
+  });
 
 })
 .catch(error => console.error('Error:', error));
 
+// Función para mostrar el modal de confirmación
+function mostrarModalConfirmacion(id) {
+  const modal = document.getElementById('modalConfirmacion');
+  const btnConfirmar = document.getElementById('btnConfirmar');
+  const btnCancelar = document.getElementById('btnCancelar');
+
+  // Mostrar el modal
+  modal.style.display = 'block';
+
+  // Acción cuando se confirma la eliminación
+  btnConfirmar.onclick = function() {
+    eliminarProducto(id); // Llama a la función de eliminación
+    modal.style.display = 'none'; // Cierra el modal
+  };
+
+  // Acción cuando se cancela
+  btnCancelar.onclick = function() {
+    modal.style.display = 'none'; // Cierra el modal
+  };
+}
+
+// Función para eliminar un producto
+// Función para eliminar un producto
+function eliminarProducto(idProducto) {
+  console.log(`Eliminando producto con ID: ${idProducto}`);
+
+  fetch(`http://localhost:5000/api/productos/productos/${idProducto}`, {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer <?php echo $_SESSION['token']; ?>',
+    'Content-Type': 'application/json'
+  }
+})
+.then(response => {
+  console.log('Código de estado:', response.status); // Verifica el código de estado HTTP
+  if (!response.ok) {
+    throw new Error('Error al eliminar el producto');
+  }
+  return response.json();
+})
+.then(data => {
+  console.log('Datos recibidos del servidor:', data);
+  
+  // Verifica si el mensaje es el esperado
+  if (data.message && data.message === 'Producto eliminado') {
+    console.log('Producto eliminado con éxito');
+    document.querySelector(`button[data-id='${idProducto}']`).closest('tr').remove();
+    location.reload(); // Recarga la página para actualizar el dashboard
+  } else {
+    console.log('Error al eliminar el producto:', data.error);
+  }
+})
+
+
+.catch(error => {
+  console.error('Error en la solicitud de eliminación:', error);
+});
+
+}
+
+
+
+
+// Cerrar la modal cuando el usuario haga clic fuera de ella
+window.onclick = function(event) {
+  const modal = document.getElementById('modalConfirmacion');
+  if (event.target === modal) {
+    modal.style.display = 'none'; // Cierra el modal
+  }
+};
 
 
   // Cerrar sesión
