@@ -30,19 +30,37 @@ const obtenerProductos = async () => {
 };
 
 
-// Obtener un producto por ID
+// Obtener un producto por ID con el nombre de la categoría
 const obtenerProductoPorId = async (idarticulo) => {
-  const query = `SELECT * FROM articulo WHERE idarticulo = ? AND estado = 1`;
+  const query = `
+    SELECT 
+      articulo.idarticulo, 
+      articulo.nombre AS articulo_nombre, 
+      articulo.codigo,
+      articulo.descripcion, 
+      articulo.precio_venta, 
+      articulo.estado, 
+      categoria.nombre AS categoria_nombre
+    FROM 
+      articulo
+    INNER JOIN 
+      categoria 
+    ON 
+      articulo.idcategoria = categoria.idcategoria
+    WHERE 
+      articulo.idarticulo = ?`;
+    
   const [result] = await pool.execute(query, [idarticulo]);
   return result;
 };
 
-// Actualizar un producto
+
+// Actualizar un producto (solo categoría, código, descripción y estado)
 const actualizarProducto = async (idarticulo, producto) => {
-  const { idcategoria, codigo, nombre, precio_venta, stock, descripcion, estado } = producto;
-  const query = `UPDATE articulo SET idcategoria = ?, codigo = ?, nombre = ?, precio_venta = ?, stock = ?, descripcion = ?, estado = ? 
+  const { codigo, descripcion, estado } = producto;
+  const query = `UPDATE articulo SET  codigo = ?, descripcion = ?, estado = ? 
                  WHERE idarticulo = ?`;
-  const [result] = await pool.execute(query, [idcategoria, codigo, nombre, precio_venta, stock, descripcion, estado, idarticulo]);
+  const [result] = await pool.execute(query, [codigo, descripcion, estado, idarticulo]);
   return result;
 };
 

@@ -59,7 +59,7 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
     <!-- Botón "Agregar..." solo visible para Admin y Encargado -->
 <?php if ($userRole == 1 || $userRole == 2): ?>
   <div class="d-flex justify-content-end mt-3">
-    <button class="btn btn-success" id="agregar-btn">Agregar...</button>
+  <a href="agregar_producto.php" class="btn btn-success" id="agregar-btn">Agregar...</a>
   </div>
 <?php endif; ?>
   <div id="productos" class="table-responsive mt-3 mx-auto">
@@ -94,6 +94,53 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
     <button id="btnConfirmar">Sí, eliminar</button>
   </div>
 </div>
+
+<!-- Modal de edición de producto -->
+<div class="modal" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true" style="display:none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Editar Producto</h5>
+        <button type="button" class="btn-close" id="btnCerrarModal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editProductForm">
+          <h4>Campos no editables:</h4>
+          <p><strong>ID:</strong> <span id="product-id"></span></p>
+          <div class="mb-3">
+            <label for="product-code" class="form-label">Código:</label>
+            <input type="text" id="product-code" class="form-control">
+          </div>
+          <p><strong>Categoría:</strong> <span id="product-cate"></span></p>
+          <div class="mb-3">
+            <label for="product-name" class="form-label">Nombre:</label>
+            <input type="text" id="product-name" class="form-control">
+          </div>
+          <div class="mb-3">
+          <p><strong>Precio:</strong> <span id="product-price"></span></p>
+          </div>
+          <div class="mb-3">
+          <p><strong>Stock:</strong> <span id="product-stock"></span></p>
+          </div>
+          <div class="mb-3">
+            <label for="product-description" class="form-label">Descripción:</label>
+            <textarea id="product-description" class="form-control"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="product-state" class="form-label">Estado:</label>
+            <select id="product-state" class="form-control">
+              <option value=1>Activo</option>
+              <option value=0>Eliminado</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-secondary" id="btnCancelarEdicion">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btnGuardarCambios">Guardar Cambios</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
   <!-- Tabla de productos -->
   
 
@@ -226,6 +273,7 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
       `;
   }
 
+  
   // Cargar productos
   // Cargar productos
 fetch('http://localhost:5000/api/productos/productos', {
@@ -278,11 +326,169 @@ fetch('http://localhost:5000/api/productos/productos', {
 
   productosBody.appendChild(row);
 });
+// Aquí agregamos el evento después de cargar los productos
+document.querySelectorAll('.btn-eliminar').forEach(btn => {
+    console.log('Botón de eliminar encontrado');
+    btn.addEventListener('click', function() {
+      const idProducto = btn.getAttribute('data-id');
+      console.log(`ID Producto: ${idProducto}`);
+      mostrarModalConfirmacion(idProducto); // Mostrar el modal con el ID del producto
+    });
+  });
 
 })
 .catch(error => console.error('Error:', error));
 
+// Función para mostrar el modal de confirmación
+function mostrarModalConfirmacion(id) {
+  const modal = document.getElementById('modalConfirmacion');
+  const btnConfirmar = document.getElementById('btnConfirmar');
+  const btnCancelar = document.getElementById('btnCancelar');
 
+  // Mostrar el modal
+  modal.style.display = 'block';
+
+  // Acción cuando se confirma la eliminación
+  btnConfirmar.onclick = function() {
+    eliminarProducto(id); // Llama a la función de eliminación
+    modal.style.display = 'none'; // Cierra el modal
+  };
+
+  // Acción cuando se cancela
+  btnCancelar.onclick = function() {
+    modal.style.display = 'none'; // Cierra el modal
+  };
+}
+
+// Función para eliminar un producto
+// Función para eliminar un producto
+function eliminarProducto(idProducto) {
+  console.log(`Eliminando producto con ID: ${idProducto}`);
+
+  fetch(`http://localhost:5000/api/productos/productos/${idProducto}`, {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer <?php echo $_SESSION['token']; ?>',
+    'Content-Type': 'application/json'
+  }
+})
+.then(response => {
+  console.log('Código de estado:', response.status); // Verifica el código de estado HTTP
+  if (!response.ok) {
+    throw new Error('Error al eliminar el producto');
+  }
+  return response.json();
+})
+.then(data => {
+  console.log('Datos recibidos del servidor:', data);
+  
+  // Verifica si el mensaje es el esperado
+  if (data.message && data.message === 'Producto eliminado') {
+    console.log('Producto eliminado con éxito');
+    document.querySelector(`button[data-id='${idProducto}']`).closest('tr').remove();
+    location.reload(); // Recarga la página para actualizar el dashboard
+  } else {
+    console.log('Error al eliminar el producto:', data.error);
+  }
+})
+
+
+.catch(error => {
+  console.error('Error en la solicitud de eliminación:', error);
+});
+
+}
+
+
+
+
+// Cerrar la modal cuando el usuario haga clic fuera de ella
+window.onclick = function(event) {
+  const modal = document.getElementById('modalConfirmacion');
+  if (event.target === modal) {
+    modal.style.display = 'none'; // Cierra el modal
+  }
+};
+
+// Función para editar un producto
+function editarProducto(idProducto) {
+  // Llama a la API para obtener los detalles del producto
+  fetch(`http://localhost:5000/api/productos/productos/${idProducto}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer <?php echo $_SESSION['token']; ?>`,
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(producto => {
+
+    console.log(producto)
+    // Carga los datos del producto en el formulario
+    document.getElementById('product-id').textContent = producto.idarticulo;
+    document.getElementById('product-code').value = producto.codigo || 'N/A';
+    document.getElementById('product-cate').textContent = producto.categoria_nombre || 'N/A';
+    document.getElementById('product-name').value = producto.articulo_nombre;
+    document.getElementById('product-price').textContent = producto.precio_venta;
+    document.getElementById('product-stock').textContent = producto.stock;
+    document.getElementById('product-description').value = producto.descripcion || '';
+    document.getElementById('product-state').value = producto.estado.data[0];
+
+    // Muestra el modal
+    document.getElementById('editModal').style.display = 'block';
+  })
+  .catch(error => console.error('Error:', error));
+}
+
+// Función para cerrar el modal
+document.getElementById('btnCerrarModal').addEventListener('click', () => {
+  document.getElementById('editModal').style.display = 'none';
+});
+
+// Función para cancelar la edición
+document.getElementById('btnCancelarEdicion').addEventListener('click', () => {
+  document.getElementById('editModal').style.display = 'none';
+});
+
+// Manejar la actualización de producto
+document.getElementById('editProductForm').addEventListener('submit', function(event) {
+  event.preventDefault(); // Evitar que el formulario se envíe de forma predeterminada
+
+
+  const idProducto = Number(document.getElementById('product-id').textContent);
+  const codigo = document.getElementById('product-code').value;
+  const descripcion = document.getElementById('product-description').value;
+  const estado = parseInt(document.getElementById('product-state').value, 10);
+
+
+  console.log(idProducto)
+  // Realizar la actualización del producto
+  const productoActualizado = {
+    codigo,
+    descripcion,
+    estado
+  };
+
+  console.log(productoActualizado)
+
+  fetch(`http://localhost:5000/api/productos/productos/${idProducto}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer <?php echo $_SESSION['token']; ?>`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(productoActualizado)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.message === 'Producto actualizado correctamente') {
+      location.reload(); // Recargar la página para reflejar los cambios
+    } else {
+      alert('Error al actualizar el producto');
+    }
+  })
+  .catch(error => console.error('Error:', error));
+});
 
   // Cerrar sesión
   document.getElementById('logout-btn').addEventListener('click', () => {
