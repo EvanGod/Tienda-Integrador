@@ -4,8 +4,8 @@ const pool = require('../db/connection');
 const crearProducto = async (producto) => {
   const { idcategoria, codigo, nombre, precio_venta, stock, descripcion, estado } = producto;
   const query = `INSERT INTO articulo (idcategoria, codigo, nombre, precio_venta, stock, descripcion, estado) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`;
-  const [result] = await pool.execute(query, [idcategoria, codigo, nombre, precio_venta, stock, descripcion, estado]);
+                 VALUES (?, ?, ?, 0, 0, ?, 0)`;
+  const [result] = await pool.execute(query, [idcategoria, codigo, nombre, descripcion]);
   return result;
 };
 
@@ -24,6 +24,8 @@ const obtenerProductos = async () => {
       articulo a
     JOIN 
       categoria c ON a.idcategoria = c.idcategoria
+    WHERE
+      a.precio_venta != 0;
   `;
   const [result] = await pool.execute(query);
   return result;
@@ -61,6 +63,7 @@ const obtenerProductoPorId = async (idarticulo) => {
       articulo.codigo,
       articulo.descripcion, 
       articulo.precio_venta, 
+      articulo.stock,
       articulo.estado, 
       categoria.nombre AS categoria_nombre
     FROM 

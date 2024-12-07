@@ -26,7 +26,7 @@ if (!$user) {
 
 $userRole = $user['role'];  // Obtén el rol del usuario desde el token
 
-if ($userRole != 2 && $userRole !=3) {
+if ($userRole != 2 && $userRole !=1) {
     header('Location: dashboard.php');  // Redirige al login si no hay token
     exit();
 }

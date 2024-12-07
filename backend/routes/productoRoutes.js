@@ -3,14 +3,16 @@ const router = express.Router();
 const productoController = require('../controllers/productoController');
 const verifyToken = require('../middleware/authMiddleware');  // Verificación del token JWT
 const checkRole = require('../middleware/roleMiddleware');  // Verificación de roles
-const validateProduct = require('../middleware/validateProducto');  // Validación de producto
+const { validateProduct, updateProduct } = require('../middleware/validateProducto');
+
+
 
 
 // Solo los roles 2 y 3 pueden crear productos
 router.post('/productos', verifyToken, checkRole([2, 3]), validateProduct, productoController.crearProducto);
 
 // Solo los roles 2 y 3 pueden actualizar productos
-router.put('/productos/:idarticulo', verifyToken, checkRole([2, 3]),  productoController.actualizarProducto);
+router.put('/productos/:idarticulo', verifyToken, checkRole([2, 3]),updateProduct,  productoController.actualizarProducto);
 
 // Solo los roles 2 y 3 pueden eliminar productos
 router.delete('/productos/:idarticulo', verifyToken, checkRole([2, 3]), productoController.eliminarProducto);

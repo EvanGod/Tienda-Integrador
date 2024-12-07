@@ -58,9 +58,10 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
     <h3 class="mt-4 text-center">Lista de Productos</h3>
     <!-- Botón "Agregar..." solo visible para Admin y Encargado -->
 <?php if ($userRole == 1 || $userRole == 2): ?>
-  <div class="d-flex justify-content-end mt-3">
-  <a href="agregar_producto.php" class="btn btn-success" id="agregar-btn">Agregar...</a>
-  </div>
+  <button type="button" class="btn btn-primary" onclick="agregarProducto()">
+  Agregar Producto
+</button>
+
 <?php endif; ?>
   <div id="productos" class="table-responsive mt-3 mx-auto">
         <table class="table table-bordered text-center" style="max-width: 100%;">  <!-- Agregado el max-width -->
@@ -95,6 +96,7 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
   </div>
 </div>
 
+
 <!-- Modal de edición de producto -->
 <div class="modal" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true" style="display:none;">
   <div class="modal-dialog">
@@ -113,8 +115,7 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
           </div>
           <p><strong>Categoría:</strong> <span id="product-cate"></span></p>
           <div class="mb-3">
-            <label for="product-name" class="form-label">Nombre:</label>
-            <input type="text" id="product-name" class="form-control">
+          <p><strong>Nombre:</strong> <span id="product-name"></span></p>
           </div>
           <div class="mb-3">
           <p><strong>Precio:</strong> <span id="product-price"></span></p>
@@ -140,6 +141,41 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
     </div>
   </div>
 </div>
+<!-- Modal de crear producto -->
+<div class="modal" id="crearModal" tabindex="-1" aria-labelledby="crearModalLabel" aria-hidden="true" style="display:none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="crearModalLabel">Crear Producto</h5>
+      </div>
+      <div class="modal-body">
+        <form id="formAgregarProducto">
+          <div class="mb-3">
+            <label for="idcategoria" class="form-label">Categoría</label>
+            <select class="form-control" id="idcategoria" name="idcategoria" required>
+              <option value="">Seleccione una categoría</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="codigo" class="form-label">Código</label>
+            <input type="text" class="form-control" id="codigo" name="codigo" required>
+          </div>
+          <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" required>
+          </div>
+          <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <textarea class="form-control" id="descripcion" name="descripcion"></textarea>
+          </div>
+          <button type="button" class="btn btn-secondary" id="btnCancelarCrear">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btnGuardarCambios">Guardar Cambios</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 
   <!-- Tabla de productos -->
   
@@ -428,7 +464,7 @@ function editarProducto(idProducto) {
     document.getElementById('product-id').textContent = producto.idarticulo;
     document.getElementById('product-code').value = producto.codigo || 'N/A';
     document.getElementById('product-cate').textContent = producto.categoria_nombre || 'N/A';
-    document.getElementById('product-name').value = producto.articulo_nombre;
+    document.getElementById('product-name').textContent = producto.articulo_nombre;
     document.getElementById('product-price').textContent = producto.precio_venta;
     document.getElementById('product-stock').textContent = producto.stock;
     document.getElementById('product-description').value = producto.descripcion || '';
@@ -484,11 +520,92 @@ document.getElementById('editProductForm').addEventListener('submit', function(e
     if (data.message === 'Producto actualizado correctamente') {
       location.reload(); // Recargar la página para reflejar los cambios
     } else {
-      alert('Error al actualizar el producto');
+      alert('El codigo debe de ser diferente');
     }
   })
   .catch(error => console.error('Error:', error));
 });
+
+function agregarProducto() {
+  document.getElementById('crearModal').style.display = 'block';
+
+  // Cargar categorías desde el backend
+  fetch('http://localhost:5000/api/categorias/', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer <?php echo $_SESSION['token']; ?>`,
+      'Content-Type': 'application/json'
+    }
+  })
+    .then(response => response.json())
+    .then(data => {
+    // Asegúrate de que el select esté vacío antes de llenarlo
+    const selectCategoria = document.getElementById('idcategoria');
+    selectCategoria.innerHTML = ''; // Limpiar el select antes de agregar las opciones
+
+    // Agregar la opción por defecto
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Seleccione una categoría';
+    selectCategoria.appendChild(defaultOption);
+
+    // Agregar las opciones de las categorías
+    data.forEach(categoria => {
+      const option = document.createElement('option');
+      option.value = categoria.idcategoria;
+      option.textContent = categoria.nombre;
+      selectCategoria.appendChild(option);
+    });
+  })
+    .catch(error => console.error('Error al cargar las categorías:', error));
+
+  // Función para cerrar el modal
+  document.getElementById('btnCerrarModal').addEventListener('click', () => {
+    document.getElementById('crearModal').style.display = 'none';
+  });
+
+  // Función para cancelar la edición
+  document.getElementById('btnCancelarCrear').addEventListener('click', () => {
+    document.getElementById('crearModal').style.display = 'none';
+  });
+
+  // Manejo del formulario
+  document.getElementById('formAgregarProducto').addEventListener('submit', function(event) {
+    event.preventDefault(); // Evitar que el formulario se envíe de forma predeterminada
+
+    const idcategoria = parseInt(document.getElementById('idcategoria').value, 10);
+    const codigo = document.getElementById('codigo').value;
+    const descripcion = document.getElementById('descripcion').value;
+    const nombre = document.getElementById('nombre').value;
+
+    const productoActualizado = {
+      idcategoria,
+      nombre,
+      codigo,
+      descripcion
+    };
+
+    console.log(productoActualizado)
+
+    fetch('http://localhost:5000/api/productos/productos', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer <?php echo $_SESSION['token']; ?>`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(productoActualizado)
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message === 'Producto creado') {
+        location.reload(); // Recargar la página para reflejar los cambios
+      } else {
+        alert(data.message);
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  });
+}
 
   // Cerrar sesión
   document.getElementById('logout-btn').addEventListener('click', () => {
