@@ -17,3 +17,70 @@ exports.ventasPorProducto = `
     GROUP BY a.idarticulo
     ORDER BY ingresos_generados DESC
 `;
+
+exports.obtenerComprobanteRepetido = `
+    SELECT 1 
+    FROM venta 
+    WHERE num_comprobante = ?
+    LIMIT 1
+`;
+
+exports.obtenerCliente = `
+    SELECT 1 
+    FROM persona 
+    WHERE idpersona = ?
+    LIMIT 1
+`;
+
+exports.obtenerStock = `
+    SELECT stock 
+    FROM articulo 
+    WHERE idarticulo = ?
+`;
+
+exports.actualizarStock = `
+    UPDATE articulo 
+    SET stock = stock - ? 
+    WHERE idarticulo = ?
+`;
+
+exports.insertarDetalleVenta = `
+    INSERT INTO detalle_venta (idventa, idarticulo, cantidad, precio, descuento) 
+    VALUES (?, ?, ?, ?, ?)
+`;
+
+exports.obtenerTodasLasVentas = `
+    SELECT 
+        v.idventa,
+        p.nombre AS cliente,
+        u.nombre AS usuario,
+        v.tipo_comprobante,
+        v.serie_comprobante,
+        v.num_comprobante,
+        v.fecha_hora,
+        v.impuesto,
+        v.total,
+        v.estado
+    FROM venta v
+    JOIN persona p ON v.idcliente = p.idpersona
+    JOIN usuario u ON v.idusuario = u.idusuario
+    ORDER BY v.fecha_hora DESC;
+`;
+
+exports.obtenerVentaPorId = `
+    SELECT 
+        v.idventa,
+        p.nombre AS cliente,
+        u.nombre AS usuario,
+        v.tipo_comprobante,
+        v.serie_comprobante,
+        v.num_comprobante,
+        v.fecha_hora,
+        v.impuesto,
+        v.total,
+        v.estado
+    FROM venta v
+    JOIN persona p ON v.idcliente = p.idpersona
+    JOIN usuario u ON v.idusuario = u.idusuario
+    WHERE v.idventa = ?;
+`;

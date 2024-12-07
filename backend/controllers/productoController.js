@@ -3,12 +3,12 @@ const productoModel = require('../models/productoModel');
 // Crear un producto
 const crearProducto = async (req, res) => {
   try {
-    const { idcategoria, codigo, nombre, precio_venta, stock, descripcion, estado } = req.body;
-    if (!idcategoria || !nombre || !precio_venta || !stock) {
+    const { idcategoria, codigo, nombre, descripcion } = req.body;
+    if (!idcategoria || !nombre ) {
       return res.status(400).json({ message: 'Faltan datos obligatorios' });
     }
 
-    const producto = { idcategoria, codigo, nombre, precio_venta, stock, descripcion, estado: estado || 1 };
+    const producto = { idcategoria, codigo, nombre, descripcion};
     const result = await productoModel.crearProducto(producto);
     res.status(201).json({ message: 'Producto creado', productoId: result.insertId });
   } catch (error) {
@@ -21,6 +21,17 @@ const crearProducto = async (req, res) => {
 const obtenerProductos = async (req, res) => {
   try {
     const productos = await productoModel.obtenerProductos();
+    res.status(200).json(productos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener productos' });
+  }
+};
+
+// Obtener todos los productos
+const obtenerProductosVenta = async (req, res) => {
+  try {
+    const productos = await productoModel.obtenerProductosVenta();
     res.status(200).json(productos);
   } catch (error) {
     console.error(error);
@@ -47,8 +58,9 @@ const obtenerProductoPorId = async (req, res) => {
 const actualizarProducto = async (req, res) => {
   try {
     const { idarticulo } = req.params;
+    console.log(req.params);
     const { codigo, descripcion, estado } = req.body;  // Solo los campos permitidos
-
+    console.log(req.body);
     // Solo asignar los campos que se deben actualizar
     const producto = { codigo, descripcion, estado };
 
@@ -79,4 +91,4 @@ const eliminarProducto = async (req, res) => {
   }
 };
 
-module.exports = { crearProducto, obtenerProductos, obtenerProductoPorId, actualizarProducto, eliminarProducto };
+module.exports = { crearProducto, obtenerProductos, obtenerProductosVenta,obtenerProductoPorId, actualizarProducto, eliminarProducto };

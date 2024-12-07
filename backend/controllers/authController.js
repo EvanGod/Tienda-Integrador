@@ -1,5 +1,6 @@
 // controllers/authController.js
 const jwt = require('jsonwebtoken');
+const pool = require('../db/connection');
 const bcrypt = require('bcryptjs');
 const { getUserByEmail, comparePassword, createUser, getRoleIdByName, getUsersByRole } = require('../models/userModel');
 
@@ -52,10 +53,18 @@ const register = async (req, res) => {
   const telefono = req.body.telefono || null;
 
   try {
-    // Validar que el email no esté registrado
-    const existingUser = await getUserByEmail(email);
-    if (existingUser) {
-      return res.status(400).json({ message: 'El correo electrónico ya está registrado' });
+    // Validar que los campos únicos no estén registrados
+    const duplicateCheckQuery = `
+      SELECT COUNT(*) AS count 
+      FROM usuario 
+      WHERE email = ? OR telefono = ? OR nombre = ? OR num_documento = ?
+    `;
+    const [rows] = await pool.execute(duplicateCheckQuery, [email, telefono, nombre, num_documento]);
+
+    if (rows[0].count > 0) {
+      return res.status(400).json({
+        message: 'El nombre, email, teléfono o número de documento ya están registrados',
+      });
     }
 
     // Obtener idrol a partir del nombre del rol
@@ -68,7 +77,11 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Crear el nuevo usuario
-    const newUser = await createUser({
+    const createUserQuery = `
+      INSERT INTO usuario (idrol, nombre, tipo_documento, num_documento, direccion, telefono, email, password)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const [newUser] = await pool.execute(createUserQuery, [
       idrol,
       nombre,
       tipo_documento,
@@ -76,17 +89,17 @@ const register = async (req, res) => {
       direccion,
       telefono,
       email,
-      password: hashedPassword,
-    });
+      hashedPassword,
+    ]);
 
     // Responder con los detalles del nuevo usuario
     res.status(201).json({
       message: 'Usuario registrado exitosamente',
       user: {
         idusuario: newUser.insertId,
-        nombre: newUser.nombre,
-        email: newUser.email,
-        rol: newUser.idrol, // o el nombre del rol si es necesario
+        nombre,
+        email,
+        rol,
       },
     });
   } catch (error) {
@@ -94,6 +107,7 @@ const register = async (req, res) => {
     res.status(500).json({ message: 'Error del servidor al registrar el usuario' });
   }
 };
+
 
 const getUsers = async (req, res) => {
   try {

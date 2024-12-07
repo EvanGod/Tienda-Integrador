@@ -75,6 +75,25 @@ if ($userRole != 1 && $userRole != 3) {
 </div>
 
 
+<div class="container mt-5">
+  <h3>Ventas Detalladas</h3>
+  <table class="table table-striped table-bordered">
+    <thead>
+      <tr>
+        <th>ID Venta</th>
+        <th>Cliente</th>
+        <th>Fecha</th>
+        <th>Total</th>
+        <th>Exportar</th>
+      </tr>
+    </thead>
+    <tbody id="ventas-table-body">
+      <!-- Las filas se generarán dinámicamente -->
+    </tbody>
+  </table>
+</div>
+
+
 
            
        
@@ -389,7 +408,76 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
+// Función para cargar las ventas y llenar la tabla
+function cargarVentas() {
+    fetch('http://localhost:5000/api/ventas/obtener', { // Cambia la URL si es necesario
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token // Incluye el token de autenticación
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          showError(data.error);
+        } else {
+          actualizarTablaVentas(data);
+        }
+      })
+      .catch(error => {
+        console.error('Error al cargar las ventas:', error);
+        showError('Error al cargar las ventas.');
+      });
+  }
 
+  // Función para actualizar la tabla con los datos de ventas
+  function actualizarTablaVentas(data) {
+    const tbody = document.getElementById('ventas-table-body');
+    tbody.innerHTML = ''; // Limpia las filas existentes
+
+    data.forEach(venta => {
+      const row = document.createElement('tr');
+
+      // Columnas
+      row.innerHTML = `
+        <td>${venta.idventa}</td>
+        <td>${venta.cliente}</td>
+        <td>${venta.fecha_hora}</td>
+        <td>${venta.total}</td>
+        <td>
+      <button class="btn btn-primary btn-sm" onclick="exportarTicket(${venta.idventa})">Exportar</button>
+    </td>
+      `;
+
+      tbody.appendChild(row);
+    });
+  }
+
+  function exportarTicket(idventa) {
+  fetch(`http://localhost:5000/api/ventas/ticket/${idventa}`, { // Incluir idventa en la ruta
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token // Incluye el token de autenticación
+      }
+    })
+    .then(response => response.blob()) // Suponiendo que el backend te devuelve el PDF
+    .then(blob => {
+      // Crear un enlace para descargar el archivo PDF
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `ticket_${idventa}.pdf`; // Nombre del archivo PDF
+      link.click();
+    })
+    .catch(error => {
+      console.error('Error al exportar el ticket:', error);
+    });
+}
+
+
+  // Llamar a la función para cargar las ventas al cargar la página
+  document.addEventListener('DOMContentLoaded', function () {
+    cargarVentas();
+  });
 
 
   // Cerrar sesión
