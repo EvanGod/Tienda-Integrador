@@ -187,14 +187,7 @@ $userRole = $user['role'];  // Obtén el rol del usuario desde el token
   } else if (userRole === 2) { // Encargado
     header.innerHTML = '<h3><a href="dashboard.php" style="text-decoration: none; color: black;">Panel de Encargado</a></h3>';
     content.innerHTML = `
-      <div class="col-md-3" onclick="window.location.href='registrar_compras.php'">
-        <div class="card">
-          <div class="card-body">
-            <i class="fas fa-cart-plus fa-3x" title="Registrar Compras"></i>
-            <p>Registrar Compras</p>
-          </div>
-        </div>
-      </div>
+      
       <div class="col-md-3" onclick="window.location.href='personas.php'">
         <div class="card">
           <div class="card-body">
